@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Zinflow Order</title>
+
+<style>
+
+body{
+font-family: 'Prompt', sans-serif;
+background: linear-gradient(135deg,#700c20);
+margin:0;
+padding:15px;
+}
+
+.container{
+max-width:420px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:18px;
+box-shadow:0 8px 20px rgba(0,0,0,0.1);
+}
+
+.header{
+text-align:center;
+font-size:20px;
+font-weight:bold;
+color:#c4003b;
+margin-bottom:5px;
+}
+
+.subtitle{
+text-align:center;
+font-size:13px;
+color:#777;
+margin-bottom:15px;
+}
+
+label{
+font-size:13px;
+margin-top:10px;
+display:block;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select{
+width:100%;
+padding:10px;
+margin-top:5px;
+border-radius:10px;
+border:1px solid #ddd;
+font-size:14px;
+box-sizing:border-box;
+}
+
+.checkbox{
+display:flex;
+align-items:center;
+gap:8px;
+margin-top:10px;
+font-size:14px;
+}
+
+.checkbox input{
+width:auto;
+}
+
+.checkbox{
+margin-top:10px;
+font-size:14px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:15px;
+border:none;
+border-radius:12px;
+font-size:15px;
+cursor:pointer;
+}
+
+.btn-main{
+background:#c4003b;
+color:white;
+}
+
+.btn-main:hover{
+background:#a00030;
+}
+
+.total{
+margin-top:10px;
+font-size:16px;
+font-weight:bold;
+color:#c4003b;
+}
+
+.modal{
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:rgba(0,0,0,0.5);
+display:none;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.modal-box{
+background:white;
+border-radius:15px;
+padding:20px;
+max-width:340px;
+width:100%;
+text-align:center;
+}
+
+textarea{
+width:100%;
+height:220px;
+border-radius:10px;
+border:1px solid #ddd;
+padding:10px;
+font-size:13px;
+resize:none;
+}
+
+.btn-copy{
+background:#444;
+color:white;
+margin-top:10px;
+}
+
+.btn-close{
+background:#bbb;
+margin-top:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">◟꒰ 𝐙𝐢𝐧𝐟𝐥𝐨𝐰.𝐦𝐬𝐮 ♡ 🍒</div>
+<div class="subtitle">รายละเอียดออเดอร์ดอกไม้</div>
+
+<label>ชื่อไอจีลูกค้า</label>
+<input type="text" id="ig">
+
+<label>จำนวนดอก</label>
+<input type="number" id="flower">
+
+<label>สีดอกไม้</label>
+<select id="color">
+<option>แดง</option>
+<option>ชมพู</option>
+<option>เบจ</option>
+<option>ฟ้า</option>
+<option>ม่วง</option>
+<option>น้ำเงิน</option>
+</select>
+
+<label>จำนวนช่อ</label>
+<input type="number" id="qty" value="1" oninput="calc()">
+
+<label>สีกระดาษ</label>
+<select id="paper" onchange="calc()">
+<option>ดำรามี่</option>
+<option>ขาวรามี่</option>
+<option>ดำฟูปกติ</option>
+<option>ขาวฟูปกติ</option>
+<option>ดำฟูจีน</option>
+<option>ขาวฟูจีน</option>
+<option>ดำล้อมมุก</option>
+<option>ขาวล้อมมุก</option>
+</select>
+
+<label>ราคาต่อช่อ (ฟูจีนระบบคำนวนบวก30)</label>
+<input type="number" id="price" oninput="calc()">
+
+<div class="checkbox">
+<input type="checkbox" id="upcountry" onchange="calc()">
+ส่งต่างจังหวัด (+60 บาท)
+</div>
+
+<div class="total">
+รวมทั้งหมด : <span id="total">0</span> บาท
+</div>
+
+<label>สถานะชำระ</label>
+<input type="text" id="status">
+
+<label>สั่งวันที่</label>
+<input type="text" id="orderdate" readonly>
+
+<label>รับวันที่</label>
+<input type="date" id="pickup">
+
+<label>ส่งที่</label>
+<input type="text" id="address">
+
+<button class="btn-main" onclick="generate()">สร้างใบออเดอร์</button>
+
+</div>
+
+<div class="modal" id="modal">
+
+<div class="modal-box">
+
+<h3>ใบออเดอร์ 🍒</h3>
+
+<textarea id="result"></textarea>
+
+<button class="btn-copy" onclick="copyText()">คัดลอกข้อความ</button>
+<button class="btn-close" onclick="closeModal()">ปิด</button>
+
+</div>
+
+</div>
+
+<script>
+
+let today = new Date().toLocaleDateString("th-TH")
+document.getElementById("orderdate").value = today
+
+function calc(){
+
+let price = parseInt(document.getElementById("price").value) || 0
+let qty = parseInt(document.getElementById("qty").value) || 0
+let paper = document.getElementById("paper").value
+let upcountry = document.getElementById("upcountry").checked
+
+let finalPrice = price
+
+if(paper.includes("ฟูจีน")){
+finalPrice += 30
+}
+
+let total = finalPrice * qty
+
+if(upcountry){
+total += 60
+}
+
+document.getElementById("total").innerText = total
+
+}
+
+function generate(){
+
+let ig = document.getElementById("ig").value
+let flower = document.getElementById("flower").value
+let color = document.getElementById("color").value
+let qty = document.getElementById("qty").value
+let paper = document.getElementById("paper").value
+let price = document.getElementById("price").value
+let total = document.getElementById("total").innerText
+let status = document.getElementById("status").value
+let orderdate = document.getElementById("orderdate").value
+let pickup = document.getElementById("pickup").value
+let address = document.getElementById("address").value
+
+let shipping = document.getElementById("upcountry").checked ? "ส่งต่างจังหวัด +60 บาท" : "ส่งในพื้นที่"
+
+let text = `
+◟꒰ 𝐙𝐢𝐧𝐟𝐥𝐨𝐰.𝐦𝐬𝐮 ♡ 🍒
+
+IG ลูกค้า : ${ig}
+จำนวนดอก : ${flower}
+สี : ${color}
+จำนวนช่อ : ${qty}
+กระดาษ : ${paper}
+ราคาต่อช่อ : ${price} บาท
+รวมทั้งหมด : ${total} บาท
+
+การจัดส่ง : ${shipping}
+สถานะชำระ : ${status}
+สั่งวันที่ : ${orderdate}
+รับวันที่ : ${pickup}
+ส่งที่ :
+${address}
+Thank You  | ขอบคุณค่ะ
+`
+
+document.getElementById("result").value = text
+document.getElementById("modal").style.display="flex"
+
+}
+
+function closeModal(){
+document.getElementById("modal").style.display="none"
+}
+
+function copyText(){
+
+let text = document.getElementById("result")
+text.select()
+document.execCommand("copy")
+alert("คัดลอกข้อความแล้ว")
+
+}
+
+</script>
+
+</body>
+</html>
